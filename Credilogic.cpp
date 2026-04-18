@@ -17,7 +17,7 @@ string nombreCliente(int tipo) {
 
 int main() {
     int tipoCliente, plazo, tieneCodeudor;
-    float monto, tasaInteres, limiteMonto, interesTotal, totalPagar;
+    float monto, tasaEntera, limiteMonto, interesTotal, totalPagar;
     int plazoMaximo;
     bool aprobado = true;
     string motivoRechazo = "";
@@ -36,64 +36,68 @@ int main() {
     cout << "Tiene codeudor? (1 = Si, 0 = No): ";
     cin >> tieneCodeudor;
 
-    // 1. Validar datos de entrada
+    // 1. Validar datos de entrada (Caso de prueba #5)
     if (tipoCliente < 1 || tipoCliente > 4 || monto <= 0 || plazo <= 0) {
         cout << "\nRESULTADO: Datos de entrada invalidos." << endl;
         return 0;
     }
 
-    // 2. Definir limites y tasas segun tipo de cliente
+    // 2. Definir limites y tasas (Usando la escala de la imagen: 0.6% -> 6)
     if (tipoCliente == 1) { // Estudiante
-        limiteMonto = (tieneCodeudor) ? 5000000 : 2000000;
-        tasaInteres = 0.006; // 0.6%
+        limiteMonto = (tieneCodeudor == 1) ? 5000000 : 2000000;
+        tasaEntera = 6; 
         plazoMaximo = (monto <= 2000000) ? 12 : 24;
     } 
     else if (tipoCliente == 2) { // Empleado
-        limiteMonto = (tieneCodeudor) ? 10000000 : 5000000;
-        tasaInteres = 0.007; // 0.7%
+        limiteMonto = (tieneCodeudor == 1) ? 10000000 : 5000000;
+        tasaEntera = 7;
         plazoMaximo = (monto <= 5000000) ? 24 : 48;
     } 
     else if (tipoCliente == 3) { // Pensionado
-        limiteMonto = (tieneCodeudor) ? 7000000 : 3000000;
-        tasaInteres = 0.004; // 0.4%
+        limiteMonto = (tieneCodeudor == 1) ? 7000000 : 3000000;
+        tasaEntera = 4;
         plazoMaximo = (monto <= 3000000) ? 24 : 36;
     } 
     else { // Desempleado
-        if (!tieneCodeudor) {
-            aprobado = false;
-            motivoRechazo = "Desempleados solo pueden aplicar si tienen codeudor.";
-        }
         limiteMonto = 2000000;
-        tasaInteres = 0.008; // 0.8%
+        tasaEntera = 8;
         plazoMaximo = 12;
-    }
-
-    // 3. Evaluar limites de credito y plazo
-    if (aprobado) {
-        if (monto > limiteMonto) {
+        if (tieneCodeudor == 0) {
             aprobado = false;
-            motivoRechazo = (tieneCodeudor) ? "El monto excede el limite con codeudor." : "El monto excede el limite sin codeudor.";
-        } else if (plazo > plazoMaximo) {
-            aprobado = false;
-            motivoRechazo = "El plazo excede el maximo permitido para este monto.";
+            motivoRechazo = "RECHAZADO. Desempleados solo pueden aplicar si tienen codeudor.";
         }
     }
 
-    // 4. Mostrar Resultados
-    cout << fixed << setprecision(0); // Para mostrar montos sin decimales
+    // 3. Evaluar limites de credito (Caso de prueba #3)
+    if (aprobado && monto > limiteMonto) {
+        aprobado = false;
+        motivoRechazo = (tieneCodeudor == 1) ? "RECHAZADO. El monto excede el limite con codeudor." 
+                                             : "RECHAZADO. El monto excede el limite sin codeudor.";
+    }
+
+    // 4. Evaluar plazo permitido (Caso de prueba #4)
+    if (aprobado && plazo > plazoMaximo) {
+        aprobado = false;
+        float umbralBajo = (tipoCliente == 1) ? 2000000 : (tipoCliente == 2) ? 5000000 : 3000000;
+        if (monto <= umbralBajo)
+            motivoRechazo = "RECHAZADO. El plazo excede el maximo permitido para montos bajos.";
+        else
+            motivoRechazo = "RECHAZADO. El plazo excede el maximo permitido para montos altos.";
+    }
+
+    // 5. Mostrar Resultados
+    cout << fixed << setprecision(0); 
     if (aprobado) {
-        interesTotal = monto * tasaInteres * plazo;
+        // FORMULA FINAL: (Monto * TasaEntera * Plazo) / 100
+        interesTotal = (monto * tasaEntera * plazo) / 100.0; 
         totalPagar = monto + interesTotal;
 
-        cout << "\n--- PRESTAMO APROBADO ---" << endl;
-        cout << "Cliente: " << nombreCliente(tipoCliente) << endl;
-        cout << "Monto: $" << monto << endl;
-        cout << "Plazo: " << plazo << " meses" << endl;
-        cout << "Tasa mensual: " << (tasaInteres * 100) << "%" << endl;
-        cout << "Total a pagar: $" << totalPagar << endl;
+        cout << "\nEl prestamo solicitado por un monto de $" << monto 
+             << " a un plazo de " << plazo << " meses es APROBADO con una Tasa del " 
+             << setprecision(1) << (tasaEntera / 10.0) << "%." << endl;
+        cout << "Total a pagar: $" << setprecision(0) << totalPagar << endl;
     } else {
-        cout << "\n--- RECHAZADO ---" << endl;
-        cout << "Motivo: " << motivoRechazo << endl;
+        cout << "\n" << motivoRechazo << endl;
     }
 
     return 0;
